@@ -1,0 +1,159 @@
+% Összeg 4/3
+% Aszalós László
+
+A feladatunk egy megadott növekvő számsorból kiválasztani három elemet, 
+melyek összege egy konkrét szám.
+
+# Naív megoldás
+
+Első ötletként felmerülhet, hogy minden keresett szám részére egy ciklust 
+nyitunk. Viszont ha már két számot ismerünk, akkor azt könnyedén 
+meghatározhatjuk. 
+Ha kiderül, hogy ez a harmadik szám is szerepel, akkor kész is vagyunk,
+ez a megoldás is elég, nem kell továbbiakat keresni. 
+Kicsit körülményes többszörös ciklusból ```break```-kal kilépni,
+ezért egy külön függvényt alkalmazunk, melyből a ```return``` segítségével
+egyszerűen kiléphetünk. A beolvasást követően 
+egyszerűen meg kell hívnunk ezt a függvényt.
+
+
+Miután egy számsorral dolgozunk, melyet el kell tárolnunk a memóriában, 
+a listával szemben a gazdaságosabb ```array```-t választjuk.
+
+<<osszeg1.py>>=             (python)
+from array import *
+<<Naív kereső függvény>>
+<<Beolvasás>>
+keres()
+@ A feladat szövege szerint a számsorozat elemeit nem használhatjuk fel 
+ többször, ezért a ciklusainkkal nem az elsőtől az utolsó elemig haladunk.
+A második ciklusváltozó (```j```) az elsőt (```i```) követő értéktől indul,
+ és az utolsó értéket a listából már nem érheti el. 
+Az első változó pedig az utolsó két értéket nem éri el.
+
+A ciklusváltozóink az indexeket jelölik, így a két megfelelő szám a sorozatban
+a ```t[i]``` és ```t[j]``` lesz. 
+Ha kettőjük összegét kivonjuk a keresett összegből, akkor a hiányzó számot 
+(```z```) kapjuk meg. 
+Ha ez az érték szerepel a tömb második ciklusváltozót követő részében, 
+akkor megtaláltuk a hármast, és kész is vagyunk.
+
+Ha eredmény nélkül mentünk végig az összes megengedett számpáron, akkor pedig
+jelezni kell a feladat megoldhatatlanságát.
+
+<<Naív kereső függvény>>=     (python)
+def keres():
+    l = len(t)
+    for i in range(l-2):
+        for j in range(i+1,l-1):
+            z = X-t[i]-t[j]
+            if z in t[j+1:]:
+                print(t[i], t[j], z)
+                return
+    print(-1)
+    return
+@ A beolvasás a szokott módon történik. Annyit egyszerűsíthetünk, 
+ hogy a beolvasott számsorozatot egyből ```array```-é konvertáljuk.
+
+<<Beolvasás>>=                (python)
+N, X =[int(x) for x in input().split()]
+t = array("i", [int(x) for x in input().split()])
+@
+
+# Továbbfejlesztett módszer
+Próbáljunk minél több felesleges lépést kihagyni, ezzel gyorsabbá válhat
+ a megoldásunk.
+
+<<osszeg2.py>>=             (python)
+from array import *
+<<Fejlett kereső függvény>>
+<<Beolvasás>>
+keres()
+@
+
+Ha az első szám túl kicsi, akkor nagyobbat kell nála keresni. 
+Akkor tekinthetjük kicsinek, ha a két legnagyobb -- azaz utolsó számmal -- 
+összeadva sem éri el a kért összeget. 
+
+Ha viszont a háromszorosa már nagyobb a keresett számnál, a garantált növekvő
+sorrend miatt nincs esély, a külső ciklusból kiléphetünk.
+
+A második szám akkor tekinthető kicsinek, ha a legnagyobb (utolsó) számot
+hozzáadva sem érjük el kért összeget, azaz túl nagy szám hiányzik még.
+Viszont ha olyan szám hiányzik, ami már biztos nem fordul elő -- mert nála 
+csak nagyobbak vannak, akkor a belső ciklust zárhatjuk le.
+
+<<Fejlett kereső függvény>>=          (python)
+def keres():
+    l = len(t)
+    for i in range(l-2):
+        if t[i]+t[l-1]+t[l-2] < X:
+            continue
+        if 3*t[i] > X:
+            break
+        for j in range(i+1,l-1):
+            z = X-t[i]-t[j]
+            if z > t[-1]:
+                continue
+            if z < t[j+1]:
+                break
+            if z in t[j+1:]:
+                print(t[i], t[j], z)
+                return
+    print(-1)
+    return
+@
+
+# C++ változat
+
+Miután a C és C++ programok egy ```return``` utasítással érnek véget,
+ természetes az, hogy ezt elhelyezzük a dupla ciklus belsejében, 
+ és így érjen véget a program futása az első hármas megtalálásakor.
+
+Ha pedig nem érhető el a keresett összeg a megadott számokból,
+ akkor a ciklusok lefutása után kiírjuk a sikertelenséget jelző _-1_-et.
+<<osszeg.cpp>>=                   (cpp)
+#include <iostream>
+#include <algorithm>
+using namespace std;
+int main(){
+  <<Adatok beolvasása>>
+  <<Egymásba ágyazott ciklusok>>
+  cout << -1 << endl;
+  return 0;
+}
+@ A beolvasás nem túl izgalmas, a megadott méretnek megfelelő tömböt kell
+deklarálni és egy ciklusban feltölteni.
+
+<<Adatok beolvasása>>=          (cpp)
+int N, X;
+cin >> N >> X;
+int t[N];
+for (int i=0; i<N; i++){
+  cin >> t[i];
+}
+@ A felesleges munka elkerülése végett úgy választjuk meg az _i_ és _j_ 
+ indexeket, hogy _i_ legyen kisebb, mint _j_. 
+Ez a ciklusok határaival tudjuk megadni.
+
+<<Egymásba ágyazott ciklusok>>=               (cpp)
+for (int i=0; i<N-2; i++)
+  for (int j=i+1; j<N-1; j++) {
+    <<A harmadik érték>>
+  }
+@ Mivel ismert az összeg és két összeadandó, a harmadikat egyszerű meghatározni.
+Már csak az a kérdés, hogy ott szerepel a tömb hátralevő részében, vagy sem.
+Mivel elvileg rendezett adatokról van szó, használhatjuk a bináris keresést,
+ amit az előre definiált algoritmusok között kell keresnünk. 
+Ennél az első két paraméter a tömb hátralévő részének címei, míg a harmadik
+ a keresett érték.
+Ha a függvény igaz értékkel tér vissza, akkor elő tudjuk állítani a keresett
+összeget, ezért ki kell írni a három számot és kész is vagyunk.
+
+<<A harmadik érték>>=                     (cpp)
+int k = X-t[i]-t[j];
+if (binary_search(t+j+1, t+N, k)) {
+  cout << t[i] << " " <<  t[j] << " " << k << endl;
+  return 0;
+}
+@
